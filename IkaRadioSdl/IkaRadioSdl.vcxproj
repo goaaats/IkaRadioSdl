@@ -72,8 +72,8 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>D:\local\SDL2-2.0.8\include;D:\local\SDL2_image-2.0.3\include;D:\local\SDL2_mixer-2.0.2\include;D:\local\bass\c;$(IncludePath)</IncludePath>
-    <LibraryPath>D:\local\SDL2-2.0.8\lib\x86;D:\local\SDL2_image-2.0.3\lib\x86;D:\local\SDL2_mixer-2.0.2\lib\x86;D:\local\bass\c;$(LibraryPath)</LibraryPath>
+    <IncludePath>D:\local\SDL2-2.0.8\include;D:\local\SDL2_image-2.0.3\include;D:\local\SDL2_mixer-2.0.2\include;D:\local\bass\c;D:\local\SDL2_ttf-2.0.14\include;$(IncludePath)</IncludePath>
+    <LibraryPath>D:\local\SDL2-2.0.8\lib\x86;D:\local\SDL2_image-2.0.3\lib\x86;D:\local\SDL2_mixer-2.0.2\lib\x86;D:\local\bass\c;D:\local\SDL2_ttf-2.0.14\lib\x86;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
@@ -98,7 +98,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>SDL2.lib;SDL2main.lib;SDL2_image.lib;SDL2_mixer.lib;bass.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>SDL2.lib;SDL2main.lib;SDL2_image.lib;SDL2_mixer.lib;bass.lib;SDL2_ttf.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>D:\local\SDL2-2.0.8\lib\x86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
@@ -154,19 +154,16 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Definitions.h" />
-    <ClInclude Include="DrawHelpers.h" />
     <ClInclude Include="GameMain.h" />
     <ClInclude Include="picojson.h" />
-    <ClInclude Include="SdlHelpers.h" />
     <ClInclude Include="SongTrack.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
+    <ClInclude Include="Texture.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="DrawHelpers.cpp" />
     <ClCompile Include="GameMain.cpp" />
     <ClCompile Include="IkaRadioSdl.cpp" />
-    <ClCompile Include="SdlHelpers.cpp" />
     <ClCompile Include="SongTrack.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
@@ -175,6 +172,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">/Yc"stdafx.h" %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
+    <ClCompile Include="Texture.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

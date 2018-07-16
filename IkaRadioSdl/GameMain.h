@@ -1,6 +1,8 @@
 #pragma once
 #include <SDL.h>
 #include "SongTrack.h"
+#include <SDL_ttf.h>
+#include "Texture.h"
 
 class GameMain
 {
@@ -32,15 +34,23 @@ private:
    SDL_Window * m_Window = NULL;
    //The surface contained by the window
    SDL_Surface* m_screenSurface = NULL;
+   //The window renderer
+   SDL_Renderer* m_renderer = NULL;
 
-   SongTrack m_songTrack;
+   // Last ticks
+   uint64_t m_lastTicks;
 
    //Assets
-   SDL_Surface* m_TitleImg = NULL;
+   Texture* m_titleTexture = new Texture();
+
+   Texture* m_fpsTexture = new Texture();
+   TTF_Font* m_mainFont = NULL;
 
    //Game variables
    bool m_hasQuit = false;
    GameState m_gameState = GameState::Title;
+   SongTrack* m_songTrack;
+   int m_selectedSong = 2;
 
    //Event handler
    SDL_Event m_eventHandler;

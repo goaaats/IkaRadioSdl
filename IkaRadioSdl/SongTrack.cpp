@@ -6,7 +6,9 @@
 #include <fstream>
 #include <chrono>
 
-SongTrack::SongTrack()
+SongTrack::SongTrack( TTF_Font* font, SDL_Renderer* renderer ): 
+   m_font( font ),
+   m_renderer( renderer )
 {
 }
 
@@ -44,6 +46,7 @@ void SongTrack::LoadNoteData()
 
 void SongTrack::LoadSong(string name, string dataname, string difficulty)
 {
+   m_currentSongName = name;
    m_currentSong = BASS_StreamCreateFile( false, ( ASSET_DIR + "song/" + name + ".wav" ).c_str(), 0, 0, 0x20000 | 0x100 );
    //m_currentSong = BASS_StreamCreateFile( false, ( ASSET_DIR + "song/" + name + ".wav" ).c_str(), 0, 0, 0x100 | 0x200000 | 0x20000 );
 
@@ -110,15 +113,26 @@ bool SongTrack::IsPlaying()
    return BASS_ChannelIsActive( m_currentSong );
 }
 
-void SongTrack::Update()
+void SongTrack::Update( uint64_t ticks )
 {
+   m_debugText->LoadFromRenderedText( m_currentSongName, SDL_Color{ 0xFF, 0xFF, 0xFF }, m_font, m_renderer );
+   m_debugText->Render( m_renderer, 0, 30 );
+
    if( m_currentSong == NULL )
       return;
 
    if( !BASS_ChannelIsActive( m_currentSong ) )
       return;
 
-   double songPos = BASS_ChannelBytes2Seconds( m_currentSong, BASS_ChannelGetPosition( m_currentSong, 0 ) );
+   auto channelPosition = BASS_ChannelGetPosition( m_currentSong, 0 );
+
+   if( channelPosition >= BASS_ChannelGetLength( m_currentSong, 0 ) )
+   {
+      printf( "SongTrack: Song ended" );
+      return;
+   }
+
+   double songPos = BASS_ChannelBytes2Seconds( m_currentSong, channelPosition );
 
    if( songPos == 0 )
       return;
@@ -130,6 +144,7 @@ void SongTrack::Update()
    bool upLHit = false;
    bool downLHit = false;
 
+   /*
    if( HasNote( songPosMs, m_notesUpR ) )
       upRHit = true;
 
@@ -141,6 +156,7 @@ void SongTrack::Update()
 
    if( HasNote( songPosMs, m_notesDownL ) )
       downLHit = true;
+   */
 
    string hitLog = "";
 
@@ -168,7 +184,14 @@ void SongTrack::Update()
    if( upLHit )
       hitLog = "Hit DOWN L";
 
-   printf( "SongTrack: songPos{%f} songPosMs{%llu} %s\n", songPos, songPosMs, hitLog.c_str() );
+   //printf( "SongTrack: songPos{%f} songPosMs{%llu} %s\n", songPos, songPosMs, hitLog.c_str() );
+
+   Draw( ticks );
+}
+
+void SongTrack::Draw( uint64_t ticks )
+{
+
 }
 
 bool SongTrack::HasNote(uint64_t tick, vector<uint64_t> vec)

@@ -3,8 +3,7 @@
 #include <SDL_mixer.h>
 #include "Definitions.h"
 #include <SDL_image.h>
-#include "SdlHelpers.h"
-#include "DrawHelpers.h"
+#include <SDL_ttf.h>
 
 
 GameMain::GameMain()
@@ -14,8 +13,6 @@ GameMain::GameMain()
       printf( "Couldn't initialize!" );
       throw exception( "GameMain initialization failed." );
    }
-
-   m_songTrack.LoadNoteData();
 
    if( !LoadAssets() )
    {
@@ -32,15 +29,24 @@ bool GameMain::LoadAssets()
 {
    bool success = true;
 
-   m_TitleImg = SdlHelpers::LoadSurface( ( ASSET_DIR + "img/Title.png" ).c_str(), m_screenSurface );
-
-   if( m_TitleImg == NULL )
+   if( !m_titleTexture->LoadFromFile( m_renderer, ASSET_DIR + "img/Title.png" ) )
    {
       printf( "Unable to load image! SDL Error: %s\n", SDL_GetError() );
       success = false;
    }
 
-   m_songTrack.LoadSong( SONG_NAMES[1].first, SONG_NAMES[1].second, "Extreme" );
+   //Open the font
+   m_mainFont = TTF_OpenFont( ( ASSET_DIR + "Splatfont2.ttf" ).c_str(), 22 );
+   if( m_mainFont == NULL )
+   {
+      printf( "Failed to load lazy font! SDL_ttf Error: %s\n", TTF_GetError() );
+      success = false;
+   }
+
+   m_songTrack = new SongTrack(m_mainFont, m_renderer);
+   m_songTrack->LoadNoteData();
+
+   m_songTrack->LoadSong( SONG_NAMES[m_selectedSong].first, SONG_NAMES[m_selectedSong].second, "Extreme" );
 
    return success;
 }
@@ -79,10 +85,32 @@ bool GameMain::Initialize()
          success = false;
       }
 
+      //Create renderer for window
+      m_renderer = SDL_CreateRenderer( m_Window, -1, SDL_RENDERER_ACCELERATED );
+      if( m_renderer == NULL )
+      {
+         printf( "Renderer could not initialize! SDL Error: %s\n", SDL_GetError() );
+         success = false;
+      }
+      else
+      {
+         //Initialize renderer color
+         SDL_SetRenderDrawColor( m_renderer, 0x0, 0x0, 0x0, 0x0 );
+      }
+
+      /* Not needed right now
       //Initialize SDL_mixer
       if( Mix_OpenAudio( 44100, MIX_DEFAULT_FORMAT, 2, 2048 ) < 0 )
       {
          printf( "SDL_mixer could not initialize! SDL_mixer Error: %s\n", Mix_GetError() );
+         success = false;
+      }
+      */
+
+      //Initialize SDL_ttf
+      if( TTF_Init() == -1 )
+      {
+         printf( "SDL_ttf could not initialize! SDL_ttf Error: %s\n", TTF_GetError() );
          success = false;
       }
 
@@ -100,11 +128,15 @@ bool GameMain::Initialize()
 void GameMain::Finish()
 {
    SDL_DestroyWindow( m_Window );
+   IMG_Quit();
+   TTF_Quit();
    SDL_Quit();
 }
 
 void GameMain::Update()
 {
+   auto ticks = SDL_GetTicks();
+
    while( SDL_PollEvent( &m_eventHandler ) != 0 )
    {
       if( m_eventHandler.type == SDL_QUIT )
@@ -117,19 +149,31 @@ void GameMain::Update()
       }
    }
 
+   //Clear screen
+   SDL_RenderClear( m_renderer );
+
    switch( m_gameState )
    {
    case Title:
    {
-      DrawHelpers::DrawSurfaceStretched( m_TitleImg, m_screenSurface );
+      //Render texture to screen
+      m_titleTexture->Render( m_renderer, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT );
+   }
+   break;
+   case InGame:
+   {
+      m_songTrack->Update( ticks );
    }
    break;
    }
 
-   m_songTrack.Update();
+   m_fpsTexture->LoadFromRenderedText( "FT: " + std::to_string(ticks - m_lastTicks), SDL_Color{ 0xFF, 0xFF, 0xFF }, m_mainFont, m_renderer );
+   m_fpsTexture->Render( m_renderer, 0, 0 );
 
+   //Update screen
+   SDL_RenderPresent( m_renderer );
 
-   SDL_UpdateWindowSurface( m_Window );
+   m_lastTicks = ticks;
 }
 
 void GameMain::HandleKeypress(SDL_Keycode key)
@@ -146,10 +190,34 @@ void GameMain::HandleKeypress(SDL_Keycode key)
    {
       if( key == SDLK_PLUS )
       {
-         if( m_songTrack.IsPlaying() )
-            m_songTrack.StopSong();
+         if( m_songTrack->IsPlaying() )
+            m_songTrack->StopSong();
          else
-            m_songTrack.StartSong();
+            m_songTrack->StartSong();
+      }
+
+      if( key == SDLK_RIGHT )
+      {
+         if( !m_songTrack->IsPlaying() )
+         {
+            if( m_selectedSong != SONG_NAMES.size() - 1 )
+               m_selectedSong++;
+
+            m_songTrack->LoadSong( SONG_NAMES[m_selectedSong].first, SONG_NAMES[m_selectedSong].second, "Extreme" );
+            printf( "Changed selected song: %i - %s\n", m_selectedSong, SONG_NAMES[m_selectedSong].first.c_str() );
+         }
+      }
+
+      if( key == SDLK_LEFT )
+      {
+         if( !m_songTrack->IsPlaying() )
+         {
+            if( m_selectedSong > 0 )
+               m_selectedSong--;
+
+            m_songTrack->LoadSong( SONG_NAMES[m_selectedSong].first, SONG_NAMES[m_selectedSong].second, "Extreme" );
+            printf( "Changed selected song: %i - %s\n", m_selectedSong, SONG_NAMES[m_selectedSong].first.c_str() );
+         }
       }
    }
    break;
